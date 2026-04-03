@@ -22,10 +22,8 @@ def main():
     logging.info('INIT: Loading configuration...')
     config = configparser.ConfigParser()
     config.read('config.ini')
-
     global gpt, db_conn
     gpt = ChatGPT(config)
-
     logging.info('INIT: Connecting to AWS RDS database for logging...')
     try:
         db_conn = psycopg2.connect(
@@ -35,9 +33,26 @@ def main():
             password=config['DATABASE']['PASSWORD'],
             port=config['DATABASE']['PORT']
         )
-        logging.info('✅ Database connected successfully!')
+        cur = db_conn.cursor()
+        
+        # create table
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS interaction_logs (
+                id SERIAL PRIMARY KEY,
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                user_id BIGINT,
+                username TEXT,
+                user_message TEXT,
+                bot_response TEXT
+            )
+        """)
+        db_conn.commit()
+        cur.close()
+        
+        logging.info('✅ Database connected and table is ready!')
     except Exception as e:
         logging.error(f'❌ Database connection failed: {e}')
+        db_conn = None
     # =====================================================================
 
     logging.info('INIT: Connecting the Telegram bot...')

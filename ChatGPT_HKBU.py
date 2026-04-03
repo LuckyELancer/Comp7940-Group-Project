@@ -35,7 +35,7 @@ class ChatGPT:
 
         payload = {
             "messages": messages,
-            "temperature": 0.7,
+            "temperature": 1,
             "max_tokens": 300,
             "top_p": 1,
             "stream": False
